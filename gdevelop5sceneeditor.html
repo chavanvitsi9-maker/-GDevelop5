@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือการสอน GDevelop 5 (หน้าออกแบบฉาก - Scene Editor) แบบอินเทอร์แอคทีฟ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Kanit for crisp Thai typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-heading: 'Kanit', sans-serif;
+            --font-body: 'Sarabun', sans-serif;
+        }
+        body {
+            font-family: var(--font-body);
+            background-color: #0b0c10;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: var(--font-heading);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #14151c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #373a4d;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        /* Exact Aspect Ratio of the GDevelop 5 Screenshot (1365 x 826) */
+        .gd-aspect-stage {
+            aspect-ratio: 1365 / 826;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: #141419;
+            transform-origin: 0 0;
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        /* Animated Highlight Bounding Box */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95),
+                            0 0 18px 4px var(--box-color, #8b5cf6),
+                            inset 0 0 12px rgba(255, 255, 255, 0.25);
+            }
+            50% {
+                box-shadow: 0 0 0 3px #ffffff,
+                            0 0 28px 8px var(--box-color, #8b5cf6),
+                            inset 0 0 18px rgba(255, 255, 255, 0.45);
+            }
+        }
+
+        @keyframes marchingAnts {
+            0% { stroke-dashoffset: 24; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        .highlight-box-active {
+            animation: pulseGlow 1.8s infinite ease-in-out;
+            z-index: 40;
+        }
+
+        /* Numbered Pin Marker */
+        .pin-marker {
+            transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pin-marker:hover {
+            transform: translate(-50%, -50%) scale(1.22);
+            z-index: 50 !important;
+        }
+        .pin-marker.active-pin {
+            transform: translate(-50%, -50%) scale(1.3);
+            z-index: 55 !important;
+            box-shadow: 0 0 0 3px #ffffff, 0 0 16px 4px currentColor;
+        }
+
+        /* Spotlight Mask Overlay */
+        .spotlight-backdrop {
+            transition: opacity 0.35s ease;
+        }
+
+        /* Drawing Canvas for Teacher's Marker */
+        #annotationCanvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0b0d13] text-slate-100">
+
+    <!-- ==================== TOP APPLICATION HEADER ==================== -->
+    <header class="bg-[#12151f]/95 backdrop-blur-md border-b border-slate-800/80 px-3 lg:px-5 py-2.5 sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-600/30 border border-violet-400/30 shrink-0">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-[11px] font-heading font-semibold uppercase tracking-wider bg-violet-500/20 text-violet-300 border border-violet-500/30 rounded-md">สื่อการสอนอินเทอร์แอคทีฟ</span>
+                        <span class="text-xs text-slate-400 hidden sm:inline">ครบทั้ง 22 จุดสำคัญ</span>
+                    </div>
+                    <h1 class="text-base sm:text-lg font-heading font-bold text-white leading-tight">
+                        คู่มือแนะนำหน้าจอโปรแกรม GDevelop 5 <span class="text-violet-400 font-normal text-sm sm:text-base">(หน้าออกแบบฉาก - Scene Editor)</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Mode Switcher & File Utilities -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Mode Tabs: Guide vs Quiz -->
+                <div class="bg-[#1b1f2e] p-1 rounded-xl border border-slate-700/70 flex items-center">
+                    <button id="btnModeGuide" onclick="setAppMode('guide')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 bg-violet-600 text-white shadow">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        <span>โหมดคู่มือการสอน</span>
+                    </button>
+                    <button id="btnModeQuiz" onclick="setAppMode('quiz')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 text-slate-300 hover:text-white">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span>โหมดทายส่วนประกอบ (Quiz)</span>
+                    </button>
+                </div>
+
+                <!-- Upload Real Screenshot Button -->
+                <label class="cursor-pointer px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-heading font-medium transition flex items-center gap-1.5 shadow-sm" title="อัปโหลดไฟล์รูปภาพหน้าจอ GDevelop 5 จากเครื่องของคุณเพื่อวางทับภาพจำลอง">
+                    <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span id="uploadBtnLabel">อัปโหลดไฟล์รูปภาพจริง</span>
+                    <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleCustomImageUpload(event)">
+                </label>
+
+                <!-- Reset to Built-in Replica Button (Hidden until custom image uploaded) -->
+                <button id="btnResetImage" onclick="resetToDefaultReplica()" class="hidden px-2.5 py-2 rounded-xl bg-rose-950/70 hover:bg-rose-900 text-rose-200 border border-rose-700/60 text-xs font-heading transition" title="กลับไปใช้ภาพจำลองคมชัดสูง">
+                    ใช้ภาพจำลองตั้งต้น
+                </button>
+
+                <!-- Download Single HTML File for Offline Classroom Teaching -->
+                <button onclick="downloadStandaloneHTML()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-medium text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 border border-emerald-400/30">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>ดาวน์โหลดไฟล์ .HTML (เปิดสอนออฟไลน์)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN WORKSPACE (LEFT STAGE + RIGHT GUIDE PANEL) ==================== -->
+    <main class="flex-1 max-w-[1920px] w-full mx-auto p-2.5 sm:p-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+
+        <!-- ==================== LEFT COLUMN: INTERACTIVE GDEVELOP 5 SCREEN (8 COLS) ==================== -->
+        <section class="xl:col-span-8 flex flex-col gap-2.5">
+
+            <!-- Interactive Canvas Control Bar -->
+            <div class="bg-[#151824] border border-slate-800 rounded-2xl p-2 sm:px-3.5 flex flex-wrap items-center justify-between gap-2 shadow-md">
+                <!-- Left Controls: Zoom & View Options -->
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <!-- Auto-Zoom Toggle -->
+                    <button id="btnAutoZoom" onclick="toggleAutoZoom()" class="px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-indigo-600/25 border-indigo-500/60 text-indigo-200" title="เมื่อคลิกเลือกจุดใด ภาพจะซูมเข้าไปหาส่วนนั้นโดยอัตโนมัติ">
+                        <span id="autoZoomDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>ซูมโฟกัสอัตโนมัติ: <strong id="autoZoomStatus">เปิด</strong></span>
+                    </button>
+
+                    <!-- Show All Bounding Boxes Toggle -->
+                    <button id="btnShowAllBoxes" onclick="toggleShowAllBoxes()" class="px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-300 hover:text-white">
+                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        <span id="showAllBoxesLabel">แสดงกรอบทั้งหมด (22 จุด)</span>
+                    </button>
+
+                    <!-- Toggle Number Pins -->
+                    <button id="btnTogglePins" onclick="togglePinsVisibility()" class="px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-300 hover:text-white" title="ซ่อนหรือแสดงปุ่มตัวเลขบนภาพเพื่อให้เห็นไอคอนด้านล่างชัดเจน">
+                        <svg class="w-3.5 h-3.5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span id="togglePinsLabel">ปุ่มตัวเลข: แสดง</span>
+                    </button>
+
+                    <!-- Spotlight Dimmer Toggle -->
+                    <button id="btnSpotlight" onclick="toggleSpotlight()" class="px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-amber-500/20 border-amber-500/50 text-amber-200" title="หรี่แสงส่วนอื่นๆ ของหน้าจอเพื่อให้กรอบที่เลือกโดดเด่นที่สุด">
+                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>เน้นเฉพาะจุด: <strong id="spotlightStatus">เปิด</strong></span>
+                    </button>
+
+                    <!-- Teacher Marker Pen Tool -->
+                    <button id="btnDrawPen" onclick="toggleDrawingMode()" class="px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-300 hover:text-white" title="ขีดเขียนหรือวงกลมเน้นบนหน้าจอระหว่างสอน">
+                        <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        <span id="drawPenLabel">ปากกาวาดบนจอ</span>
+                    </button>
+                    <button id="btnClearDraw" onclick="clearAnnotationCanvas()" class="hidden px-2 py-1.5 rounded-lg text-xs font-heading bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/60 transition">
+                        ลบเส้นวาด
+                    </button>
+                </div>
+
+                <!-- Right Controls: Manual Zoom & Reset -->
+                <div class="flex items-center gap-1.5">
+                    <div class="flex items-center bg-[#0d0f17] rounded-lg border border-slate-800 p-0.5">
+                        <button onclick="manualZoom(-0.35)" class="px-2 py-1 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded transition" title="ซูมออก">−</button>
+                        <span id="zoomPercentBadge" class="px-2 text-xs font-mono text-violet-300 font-semibold min-w-[52px] text-center">100%</span>
+                        <button onclick="manualZoom(0.35)" class="px-2 py-1 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded transition" title="ซูมเข้า">+</button>
+                    </div>
+                    <button onclick="resetZoomView()" class="px-2.5 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 text-violet-200 border border-violet-500/40 text-xs font-heading font-medium transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <span>แสดงภาพรวมทั้งหน้า</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== VIEWPORT CONTAINER (WITH PAN & ZOOM) ==================== -->
+            <div id="viewportOuter" class="relative w-full rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl bg-[#090a0f] select-none">
+
+                <!-- Floating Active Banner on Top of Screen when Zoomed -->
+                <div id="floatingZoomBanner" class="hidden absolute top-3 left-3 z-40 pointer-events-none bg-slate-950/90 backdrop-blur-md border border-violet-500/50 rounded-xl px-3 py-1.5 shadow-xl flex items-center gap-2">
+                    <span id="floatingBannerNum" class="w-6 h-6 rounded-lg bg-violet-600 text-white font-heading font-bold text-xs flex items-center justify-center">1</span>
+                    <div>
+                        <div id="floatingBannerTitle" class="text-xs sm:text-sm font-heading font-bold text-white leading-none">ปุ่มเมนูหลัก</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">กดปุ่ม ESC หรือ "แสดงภาพรวมทั้งหน้า" เพื่อซูมออก</div>
+                    </div>
+                </div>
+
+                <!-- THE ZOOMABLE STAGE (1365 x 826 Aspect Ratio matching the exact screenshot) -->
+                <div id="zoomStage" class="gd-aspect-stage">
+
+                    <!-- 1. BUILT-IN PIXEL-ACCURATE GDEVELOP 5 THAI UI REPLICA -->
+                    <div id="gdReplicaLayer" class="absolute inset-0 w-full h-full bg-[#141419] text-[#e6e6ed] overflow-hidden" style="container-type: inline-size;">
+                        <!-- We use percentage layout matching the exact screenshot 100% -->
+
+                        <!-- [ROW 1] TOP TITLE & TAB BAR (y: 0% -> 4.9%) -->
+                        <div class="absolute top-0 left-0 right-0 h-[4.9%] bg-[#121217] flex items-center justify-between px-[0.5%] border-b border-[#252530]">
+                            <!-- Left Tabs Group -->
+                            <div class="flex items-center h-full gap-[0.3%] w-[75%]">
+                                <!-- 1. Hamburger Menu -->
+                                <div class="w-[3.2%] h-[82%] flex items-center justify-center rounded hover:bg-white/5 text-[#d8d8e2]">
+                                    <svg class="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </div>
+                                <!-- 2. Home Icon Tab -->
+                                <div class="w-[3.4%] h-[82%] bg-[#25252e] rounded-t-md flex items-center justify-center text-[#d8d8e2] border-t border-x border-[#32323e]">
+                                    <svg class="w-[52%] h-[52%]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"/></svg>
+                                </div>
+                                <!-- 3. Active Tab: ฉากไม่มีชื่อ -->
+                                <div class="w-[13.7%] h-[84%] bg-[#282832] rounded-t-md flex items-center justify-between px-[1.2%] border-t border-x border-[#3c3c4a] text-white">
+                                    <div class="flex items-center gap-[6%] truncate">
+                                        <!-- Film / Scene Icon -->
+                                        <svg class="w-[15%] shrink-0 text-[#e4e4ec]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 8h4M3 12h18M3 16h4M17 8h4M17 16h4"/></svg>
+                                        <span class="font-bold truncate" style="font-size: 1.02cqw;">ฉากไม่มีชื่อ</span>
+                                    </div>
+                                    <span class="text-[#b0b0be]" style="font-size: 1.1cqw;">×</span>
+                                </div>
+                                <!-- 4. Inactive Tab: ฉากไม่มีชื่อ (อีเว้นท์) -->
+                                <div class="w-[19.0%] h-[84%] bg-[#1e1e26] rounded-t-md flex items-center justify-between px-[1.2%] border-t border-x border-[#2b2b36] text-[#a8a8b8]">
+                                    <div class="flex items-center gap-[5%] truncate">
+                                        <!-- Events Icon -->
+                                        <svg class="w-[11%] shrink-0 text-[#a8a8b8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="7" height="5" rx="1"/><rect x="14" y="5" width="7" height="5" rx="1"/><rect x="3" y="14" width="7" height="5" rx="1"/><rect x="14" y="14" width="7" height="5" rx="1"/><path d="M10 7.5h4M10 16.5h4"/></svg>
+                                        <span class="truncate" style="font-size: 1.0cqw;">ฉากไม่มีชื่อ (อีเว้นท์)</span>
+                                    </div>
+                                    <span class="text-[#8e8e9e]" style="font-size: 1.1cqw;">×</span>
+                                </div>
+                            </div>
+
+                            <!-- Right Ask AI & Window Controls -->
+                            <div class="flex items-center gap-[1.8%] pr-[0.6%]">
+                                <!-- 5. Ask AI -->
+                                <div class="flex items-center gap-[6%] px-[6%] py-[2%] rounded-md hover:bg-white/5 whitespace-nowrap">
+                                    <span class="inline-flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 via-pink-500 to-violet-500 p-[1.5px]" style="width: 1.3cqw; height: 1.3cqw;">
+                                        <span class="w-full h-full bg-[#141419] rounded-full flex items-center justify-center text-[0.75cqw]">🤖</span>
+                                    </span>
+                                    <span class="font-semibold text-[#e2e2ec]" style="font-size: 0.95cqw;">Ask AI</span>
+                                </div>
+                                <!-- Window Min/Max/Close -->
+                                <div class="flex items-center gap-[1.6cqw] text-[#b0b0c0]" style="font-size: 0.95cqw;">
+                                    <span>─</span>
+                                    <span>❐</span>
+                                    <span>✕</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- [ROW 2] MAIN ACTION TOOLBAR (y: 4.9% -> 10.3%) -->
+                        <div class="absolute top-[4.9%] left-0 right-0 h-[5.4%] bg-[#1d1d26] border-b border-[#111116] flex items-center justify-between px-[0.8%]">
+                            <!-- 6. Left Project Manager & Save Icons -->
+                            <div class="flex items-center gap-[0.9cqw]">
+                                <!-- Project Manager Icon -->
+                                <svg class="text-[#d4d4e0]" style="width: 1.45cqw; height: 1.45cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M8 9h8M8 12h5M8 15h6"/>
+                                </svg>
+                                <!-- Floppy Save Icon -->
+                                <svg class="text-[#a0a0b2]" style="width: 1.4cqw; height: 1.4cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                            </div>
+
+                            <!-- 7 & 8. Center Preview & Share Buttons -->
+                            <div class="absolute left-[38.6%] flex items-center gap-[0.5cqw] h-[74%]">
+                                <!-- 7. Preview Button Group -->
+                                <div class="flex items-center h-full rounded-[0.45cqw] border border-[#4a4a5a] bg-[#1d1d26] overflow-hidden">
+                                    <div class="flex items-center gap-[0.6cqw] px-[1.1cqw] h-full border-r border-[#4a4a5a] text-[#ededf5]">
+                                        <svg style="width: 1.0cqw; height: 1.0cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                                        <span class="font-medium whitespace-nowrap" style="font-size: 0.98cqw;">แสดงตัวอย่าง</span>
+                                    </div>
+                                    <div class="px-[0.55cqw] h-full flex items-center justify-center text-[#c8c8d8]">
+                                        <svg style="width: 0.9cqw; height: 0.9cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </div>
+                                </div>
+
+                                <!-- 8. Share Button (Purple) -->
+                                <div class="flex items-center gap-[0.5cqw] px-[1.1cqw] h-full rounded-[0.45cqw] bg-[#623ce6] text-white font-medium shadow-sm">
+                                    <svg style="width: 1.15cqw; height: 1.15cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M11.5 3a17 17 0 000 18M12.5 3a17 17 0 010 18"/></svg>
+                                    <span style="font-size: 0.98cqw;">แชร์</span>
+                                </div>
+                            </div>
+
+                            <!-- 9, 10, 11, 12. Right Toolbar Controls -->
+                            <div class="flex items-center gap-[0.6cqw] h-[72%]">
+                                <!-- 9. 2D / 3D Switcher -->
+                                <div class="flex items-center bg-[#282834] p-[0.15cqw] rounded-[0.4cqw] border border-[#363646] h-full">
+                                    <div class="flex items-center gap-[0.3cqw] px-[0.65cqw] h-full rounded-[0.3cqw] bg-[#b4a7f5] text-[#181822] font-bold" style="font-size: 0.9cqw;">
+                                        <svg style="width: 1.0cqw; height: 1.0cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+                                        <span>2D</span>
+                                    </div>
+                                    <div class="flex items-center gap-[0.3cqw] px-[0.65cqw] h-full text-[#c5c5d4] font-semibold" style="font-size: 0.9cqw;">
+                                        <svg style="width: 1.0cqw; height: 1.0cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+                                        <span>3D</span>
+                                    </div>
+                                </div>
+
+                                <!-- 10. 5 Panel Toggle Icons -->
+                                <div class="flex items-center gap-[0.35cqw] h-full">
+                                    <!-- Objects Panel Toggle (Active Lavender) -->
+                                    <div class="w-[1.9cqw] h-[1.9cqw] rounded-[0.35cqw] bg-[#b4a7f5] text-[#181822] flex items-center justify-center">
+                                        <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+                                    </div>
+                                    <!-- Instances List Toggle -->
+                                    <div class="w-[1.9cqw] h-[1.9cqw] rounded-[0.35cqw] text-[#d0d0de] flex items-center justify-center">
+                                        <svg style="width: 1.25cqw; height: 1.25cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l4 2.2v4.6L12 11 8 8.8V4.2L12 2zM6 12l4 2.2v4.6L6 21l-4-2.2v-4.6L6 12zM18 12l4 2.2v4.6L18 21l-4-2.2v-4.6L18 12z"/></svg>
+                                    </div>
+                                    <!-- Properties Panel Toggle (Active Lavender) -->
+                                    <div class="w-[1.9cqw] h-[1.9cqw] rounded-[0.35cqw] bg-[#b4a7f5] text-[#181822] flex items-center justify-center">
+                                        <svg style="width: 1.15cqw; height: 1.15cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                    </div>
+                                    <!-- Object Groups Toggle -->
+                                    <div class="w-[1.9cqw] h-[1.9cqw] rounded-[0.35cqw] text-[#d0d0de] flex items-center justify-center">
+                                        <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="8" r="2"/><path d="M10 8h10"/><circle cx="5" cy="16" r="2"/><path d="M10 16h10"/></svg>
+                                    </div>
+                                    <!-- Layers Panel Toggle (Active Lavender) -->
+                                    <div class="w-[1.9cqw] h-[1.9cqw] rounded-[0.35cqw] bg-[#b4a7f5] text-[#181822] flex items-center justify-center">
+                                        <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg>
+                                    </div>
+                                </div>
+
+                                <!-- 11. Grid Toggle (#) -->
+                                <div class="w-[1.9cqw] h-[1.9cqw] flex items-center justify-center text-[#d0d0de] font-mono font-bold" style="font-size: 1.35cqw;">
+                                    #
+                                </div>
+
+                                <div class="h-[65%] w-[1px] bg-[#343444]"></div>
+
+                                <!-- 12. Undo, Redo, Zoom, Delete, Extra -->
+                                <div class="flex items-center gap-[0.65cqw] text-[#7c7c8e]">
+                                    <!-- Undo -->
+                                    <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 015.5 5.5v0a5.5 5.5 0 01-5.5 5.5H11"/></svg>
+                                    <!-- Redo -->
+                                    <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 004 14.5v0A5.5 5.5 0 009.5 20H13"/></svg>
+                                    <!-- Zoom Magnifier -->
+                                    <svg class="text-[#d0d0de]" style="width: 1.25cqw; height: 1.25cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
+                                    <!-- Trash Delete -->
+                                    <svg style="width: 1.2cqw; height: 1.2cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                    <div class="h-[1.3cqw] w-[1px] bg-[#343444]"></div>
+                                    <!-- Rightmost Quick Tool Icon -->
+                                    <svg class="text-[#d0d0de]" style="width: 1.25cqw; height: 1.25cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h8M8 12h5M15 16l3-3"/></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- [ROW 3] THREE-COLUMN WORKSPACE (y: 10.3% -> 100%) -->
+                        <!-- LEFT PANEL: คุณสมบัติ (Properties) (x: 0% -> 20.0%) -->
+                        <div class="absolute top-[10.3%] bottom-0 left-0 w-[20.0%] bg-[#1d1d26] border-r border-[#111116] flex flex-col">
+                            <!-- Panel Header -->
+                            <div class="h-[4.3%] bg-[#252530] px-[5%] flex items-center justify-between border-b border-[#16161d]">
+                                <span class="font-bold text-[#e6e6f0]" style="font-size: 1.0cqw;">คุณสมบัติ</span>
+                                <span class="text-[#a8a8b8]" style="font-size: 1.15cqw;">✕</span>
+                            </div>
+                            <!-- Scene Title Bar -->
+                            <div class="h-[5.4%] px-[5%] flex items-center gap-[4%] border-b border-[#2a2a36]">
+                                <svg class="text-[#d0d0de]" style="width: 1.1cqw; height: 1.1cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 8h4M3 16h4M17 8h4M17 16h4"/></svg>
+                                <span class="font-bold text-white" style="font-size: 1.02cqw;">ฉากไม่มีชื่อ</span>
+                                <span class="w-[1.15cqw] h-[1.15cqw] rounded-full border border-[#8e8ea0] text-[#a8a8b8] flex items-center justify-center" style="font-size: 0.75cqw;">?</span>
+                            </div>
+                            <!-- Accordion Row 1: คุณสมบัติ -->
+                            <div class="h-[7.2%] px-[5%] flex items-center gap-[4.5%] border-b border-[#2a2a36]">
+                                <div class="w-[1.35cqw] h-[1.35cqw] rounded-[0.3cqw] border border-[#a0a0b2] flex items-center justify-center text-[#d8d8e6]" style="font-size: 0.8cqw;">❯</div>
+                                <span class="font-bold text-white" style="font-size: 1.08cqw;">คุณสมบัติ</span>
+                            </div>
+                            <!-- Accordion Row 2: พฤติกรรม -->
+                            <div class="h-[7.2%] px-[5%] flex items-center gap-[4.5%] border-b border-[#2a2a36]">
+                                <div class="w-[1.35cqw] h-[1.35cqw] rounded-[0.3cqw] border border-[#a0a0b2] flex items-center justify-center text-[#d8d8e6]" style="font-size: 0.8cqw;">❯</div>
+                                <span class="font-bold text-white" style="font-size: 1.08cqw;">พฤติกรรม</span>
+                            </div>
+                            <!-- Accordion Row 3: ตัวแปรของฉาก -->
+                            <div class="h-[7.2%] px-[5%] flex items-center justify-between border-b border-[#2a2a36]">
+                                <div class="flex items-center gap-[4.5%] whitespace-nowrap">
+                                    <div class="w-[1.35cqw] h-[1.35cqw] rounded-[0.3cqw] border border-[#a0a0b2] flex items-center justify-center text-[#d8d8e6]" style="font-size: 0.8cqw;">❯</div>
+                                    <span class="font-bold text-white" style="font-size: 1.08cqw;">ตัวแปรของฉาก</span>
+                                </div>
+                                <div class="flex items-center gap-[0.8cqw] text-[#c8c8d8]" style="font-size: 1.15cqw;">
+                                    <svg style="width: 1.05cqw; height: 1.05cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                                    <span>+</span>
+                                </div>
+                            </div>
+                            <!-- Empty State Hint Message -->
+                            <div class="px-[7%] pt-[14%] text-center text-[#8c8ca0] leading-relaxed" style="font-size: 0.98cqw;">
+                                คลิกที่อินสแตนซ์บนผืนผ้าใบหรือวัตถุใน<br>รายการเพื่อแสดงคุณสมบัติของมัน
+                            </div>
+                        </div>
+
+                        <!-- CENTER CANVAS: ผืนผ้าใบออกแบบฉาก (x: 20.0% -> 80.0%) -->
+                        <div class="absolute top-[10.3%] bottom-0 left-[20.0%] w-[60.0%] bg-[#f2f2f5] flex items-center justify-center">
+                            <!-- Inner Camera Viewport Border Frame (matches x: 22.4%, y: 28.5%, w: 55.2%, h: 53.1% of whole screen) -->
+                            <div class="absolute border border-[#96969c]" style="left: 4.1%; top: 20.3%; width: 91.8%; height: 59.2%;"></div>
+                        </div>
+
+                        <!-- RIGHT PANEL TOP: วัตถุ (Objects) (x: 80.0% -> 100%, y: 10.3% -> 56.0%) -->
+                        <div class="absolute top-[10.3%] h-[45.7%] right-0 w-[20.0%] bg-[#1d1d26] border-l border-b border-[#111116] flex flex-col">
+                            <!-- Header -->
+                            <div class="h-[8.5%] bg-[#252530] px-[5%] flex items-center justify-between border-b border-[#16161d]">
+                                <span class="font-bold text-[#e6e6f0]" style="font-size: 1.0cqw;">วัตถุ</span>
+                                <span class="text-[#a8a8b8]" style="font-size: 1.15cqw;">✕</span>
+                            </div>
+                            <!-- Search Box -->
+                            <div class="px-[4%] py-[3.2%]">
+                                <div class="w-full bg-[#2a2a36] rounded-[0.35cqw] px-[4%] py-[2.2%] flex items-center gap-[3.5%] border border-[#383846] text-[#8e8ea0]">
+                                    <svg style="width: 0.95cqw; height: 0.95cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <span style="font-size: 0.92cqw;">ค้นหาวัตถุ</span>
+                                </div>
+                            </div>
+                            <!-- Global Objects Row -->
+                            <div class="px-[5%] py-[2.5%] flex items-center gap-[3.5%] border-b border-[#2a2a36]">
+                                <span class="text-[#a0a0b2]" style="font-size: 0.85cqw;">❯</span>
+                                <span class="font-bold text-white" style="font-size: 1.12cqw;">วัตถุทั่วไป</span>
+                            </div>
+                            <!-- Scene Objects Row + Purple Add Button -->
+                            <div class="px-[5%] py-[3.2%] flex items-center justify-between">
+                                <div class="flex items-center gap-[3.5%]">
+                                    <span class="text-[#a0a0b2]" style="font-size: 0.85cqw;">⌄</span>
+                                    <span class="font-bold text-white" style="font-size: 1.12cqw;">วัตถุฉาก</span>
+                                </div>
+                                <div class="bg-[#623ce6] text-white rounded-[0.4cqw] px-[5%] py-[2.2%] flex items-center gap-[0.4cqw] font-medium shadow">
+                                    <span style="font-size: 1.15cqw;">+</span>
+                                    <span style="font-size: 0.95cqw;">เพิ่มวัตถุ</span>
+                                </div>
+                            </div>
+                            <div class="px-[14%] pt-[2%] text-[#d0d0de]" style="font-size: 0.95cqw;">
+                                เริ่มโดยการเพิ่มวัตถุใหม่
+                            </div>
+                        </div>
+
+                        <!-- RIGHT PANEL BOTTOM: เลเยอร์ (Layers) (x: 80.0% -> 100%, y: 56.0% -> 100%) -->
+                        <div class="absolute top-[56.0%] bottom-0 right-0 w-[20.0%] bg-[#1d1d26] border-l border-[#111116] flex flex-col">
+                            <!-- Header -->
+                            <div class="h-[9.0%] bg-[#252530] px-[5%] flex items-center justify-between border-b border-[#16161d]">
+                                <span class="font-bold text-[#e6e6f0]" style="font-size: 1.0cqw;">เลเยอร์</span>
+                                <span class="text-[#a8a8b8]" style="font-size: 1.15cqw;">✕</span>
+                            </div>
+                            <!-- Plus Row -->
+                            <div class="px-[6%] py-[2.5%] flex justify-end text-[#d8d8e6]" style="font-size: 1.35cqw;">
+                                +
+                            </div>
+                            <!-- Base Layer Row -->
+                            <div class="px-[7%] py-[2.8%] flex items-center justify-between">
+                                <span class="font-medium text-white" style="font-size: 0.98cqw;">เลเยอร์ฐาน</span>
+                                <div class="flex items-center gap-[0.95cqw] text-[#d0d0de]">
+                                    <!-- Effect Circle Icon -->
+                                    <svg style="width: 1.05cqw; height: 1.05cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <!-- Eye Visibility Icon -->
+                                    <svg style="width: 1.1cqw; height: 1.1cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <!-- Padlock Icon -->
+                                    <svg style="width: 1.0cqw; height: 1.0cqw;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                                    <!-- More Vertical Dots -->
+                                    <span style="font-size: 1.1cqw;">⋮</span>
+                                </div>
+                            </div>
+                            <!-- Background Color Row -->
+                            <div class="px-[7%] py-[3.2%] flex items-center justify-between">
+                                <span class="font-medium text-white" style="font-size: 0.98cqw;">สีพื้นหลัง</span>
+                                <div class="w-[3.4cqw] h-[1.9cqw] rounded-[0.35cqw] bg-[#f4f4f8] border border-[#b0b0be]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. OPTIONAL UPLOADED REAL SCREENSHOT LAYER -->
+                    <img id="uploadedScreenshotImg" src="" alt="GDevelop 5 Screenshot" class="hidden absolute inset-0 w-full h-full object-fill z-10 pointer-events-none" />
+
+                    <!-- 3. SVG SPOTLIGHT MASK & BOUNDING BOXES OVERLAY LAYER -->
+                    <svg id="svgOverlay" class="absolute inset-0 w-full h-full z-20 pointer-events-none" viewBox="0 0 1000 605" preserveAspectRatio="none">
+                        <defs>
+                            <!-- Mask that dims everything except the active hotspot rectangle -->
+                            <mask id="spotlightMask">
+                                <rect x="0" y="0" width="1000" height="605" fill="white" />
+                                <rect id="spotlightCutout" x="0" y="0" width="0" height="0" rx="6" fill="black" />
+                            </mask>
+                        </defs>
+                        <!-- Dimmed backdrop using the mask -->
+                        <rect id="spotlightRect" x="0" y="0" width="1000" height="605" fill="rgba(5, 6, 12, 0.62)" mask="url(#spotlightMask)" class="spotlight-backdrop" />
+                    </svg>
+
+                    <!-- 4. INTERACTIVE HOTSPOT BOUNDING BOXES & PINS LAYER -->
+                    <div id="hotspotsLayer" class="absolute inset-0 w-full h-full z-30"></div>
+
+                    <!-- 5. TEACHER FREEHAND ANNOTATION CANVAS LAYER -->
+                    <canvas id="annotationCanvas" class="absolute inset-0 w-full h-full z-45 pointer-events-none"></canvas>
+                </div>
+            </div>
+
+            <!-- Bottom Category Filter Legend Bar -->
+            <div class="bg-[#141722] border border-slate-800/90 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 text-xs text-slate-400 font-heading">
+                    <span>กรองตามหมวดหมู่:</span>
+                </div>
+                <div id="categoryFilterBar" class="flex flex-wrap items-center gap-1.5">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== RIGHT COLUMN: TEACHING DETAILS & QUIZ PANEL (4 COLS) ==================== -->
+        <aside class="xl:col-span-4 flex flex-col gap-3">
+
+            <!-- ========== PANEL A: GUIDE MODE (STEP-BY-STEP & INSPECTOR) ========== -->
+            <div id="guideSidebarPanel" class="flex flex-col gap-3">
+
+                <!-- Step-by-Step Navigation Card -->
+                <div class="bg-gradient-to-br from-[#191d2c] to-[#131622] border border-slate-700/80 rounded-2xl p-4 shadow-xl relative overflow-hidden">
+                    <!-- Top Stepper Controls -->
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <button onclick="stepHotspot(-1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600/70 text-xs sm:text-sm font-heading font-medium transition flex items-center gap-1.5">
+                            <span>◀</span>
+                            <span>ก่อนหน้า</span>
+                        </button>
+
+                        <div class="text-center">
+                            <span class="text-[11px] uppercase tracking-wider text-slate-400 block">ลำดับการสอน</span>
+                            <span id="stepCounterBadge" class="text-sm font-heading font-bold text-violet-300">จุดที่ 1 จาก 22</span>
+                        </div>
+
+                        <button onclick="stepHotspot(1)" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white shadow-md shadow-violet-600/30 text-xs sm:text-sm font-heading font-medium transition flex items-center gap-1.5">
+                            <span>ถัดไป</span>
+                            <span>▶</span>
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
+                        <div id="stepProgressBar" class="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300" style="width: 4.5%;"></div>
+                    </div>
+
+                    <!-- Selected Hotspot Category & Number Header -->
+                    <div class="flex items-start gap-3 mb-3">
+                        <div id="detailPinBadge" class="w-11 h-11 rounded-2xl font-heading font-bold text-lg flex items-center justify-center text-white shadow-lg shrink-0 bg-violet-600">
+                            1
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div id="detailCategoryTag" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-heading font-semibold mb-1 bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                                หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด
+                            </div>
+                            <h2 id="detailTitle" class="text-lg sm:text-xl font-heading font-bold text-white leading-snug">
+                                ปุ่มเมนูหลัก (≡)
+                            </h2>
+                            <p id="detailSubtitle" class="text-xs text-slate-400 font-mono">
+                                Main Menu / Application Menu
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Main Description Box -->
+                    <div class="bg-[#0e1018]/90 border border-slate-800 rounded-xl p-3.5 mb-3">
+                        <div class="text-xs font-heading font-semibold text-violet-300 mb-1 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>หน้าที่และการใช้งาน:</span>
+                        </div>
+                        <p id="detailDescription" class="text-sm sm:text-[15px] text-slate-200 leading-relaxed">
+                            เปิดเมนูหลักของโปรแกรม เช่น สร้าง/เปิด/บันทึกโปรเจกต์, ตั้งค่าโปรแกรม (Preferences) และเปลี่ยนภาษา
+                        </p>
+                    </div>
+
+                    <!-- Student Tip & Shortcut Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <!-- Student Tip -->
+                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
+                            <div class="text-xs font-heading font-semibold text-amber-300 mb-1 flex items-center gap-1">
+                                <span>💡</span>
+                                <span>เคล็ดลับสำหรับนักเรียน</span>
+                            </div>
+                            <p id="detailTip" class="text-xs text-amber-100/90 leading-relaxed">
+                                หากเมนูเป็นภาษาอังกฤษ สามารถเปลี่ยนเป็นภาษาไทยได้ที่ File > Preferences > Language
+                            </p>
+                        </div>
+
+                        <!-- Shortcut / Quick Action -->
+                        <div class="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3">
+                            <div class="text-xs font-heading font-semibold text-sky-300 mb-1 flex items-center gap-1">
+                                <span>⌨️</span>
+                                <span>คีย์ลัด / การสั่งงาน</span>
+                            </div>
+                            <p id="detailShortcut" class="text-xs text-sky-100/90 leading-relaxed font-medium">
+                                คลิกซ้ายที่ไอคอน ≡ มุมซ้ายบนสุด หรือกด Ctrl+S เพื่อบันทึกงานด่วน
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search & Complete 22-Point Directory List -->
+                <div class="bg-[#141722] border border-slate-800 rounded-2xl p-3.5 flex flex-col shadow-lg">
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <h3 class="text-sm font-heading font-bold text-slate-200 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            <span>สารบัญส่วนประกอบทั้ง 22 จุด</span>
+                        </h3>
+                        <span class="text-[11px] text-slate-400">คลิกเพื่อซูมดูแต่ละจุด</span>
+                    </div>
+
+                    <!-- Quick Search Input -->
+                    <div class="relative mb-2.5">
+                        <input type="text" id="searchHotspotInput" oninput="renderHotspotDirectory()" placeholder="ค้นหาชื่อปุ่ม หรือหน้าที่ (เช่น ตัวแปร, เลเยอร์, แชร์)..." class="w-full bg-[#0c0e15] border border-slate-700/80 focus:border-violet-500 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition">
+                        <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+
+                    <!-- Scrollable List of 22 Hotspots -->
+                    <div id="hotspotListContainer" class="max-h-[360px] overflow-y-auto pr-1 space-y-1.5">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PANEL B: CLASSROOM QUIZ MODE (HIDDEN BY DEFAULT) ========== -->
+            <div id="quizSidebarPanel" class="hidden flex-col gap-3">
+                <div class="bg-gradient-to-br from-[#1f1b2e] to-[#141724] border border-amber-500/40 rounded-2xl p-4 shadow-xl">
+                    <!-- Quiz Scoreboard Header -->
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-lg">🏆</span>
+                            <div>
+                                <h2 class="text-base font-heading font-bold text-white">โหมดทายส่วนประกอบหน้าจอ</h2>
+                                <p class="text-xs text-slate-400">ดูกรอบสีเหลืองที่ซูมบนภาพ แล้วทายว่าคือส่วนใด</p>
+                            </div>
+                        </div>
+                        <div class="text-right bg-[#0e1018] px-3 py-1.5 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">คะแนนสะสม</span>
+                            <span id="quizScoreDisplay" class="text-base font-heading font-bold text-emerald-400">0 / 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Question Box -->
+                    <div class="bg-[#0e1018] border border-amber-500/30 rounded-xl p-3.5 mb-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span id="quizQuestionNumber" class="text-xs font-heading font-semibold text-amber-400">คำถามข้อที่ 1</span>
+                            <span id="quizCategoryHint" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">หมวดแถบด้านบน</span>
+                        </div>
+                        <p class="text-sm sm:text-base font-heading font-medium text-white mb-2">
+                            ส่วนประกอบที่ตีกรอบเรืองแสง <span class="text-amber-400 font-bold">[ ? ]</span> บนหน้าจอ มีชื่อและหน้าที่ตรงกับข้อใด?
+                        </p>
+                        <p id="quizFunctionClue" class="text-xs text-slate-300 bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                            คำใบ้หน้าที่: ...
+                        </p>
+                    </div>
+
+                    <!-- 4 Multiple Choice Options -->
+                    <div id="quizOptionsContainer" class="space-y-2 mb-4">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Quiz Feedback Message -->
+                    <div id="quizFeedbackBox" class="hidden rounded-xl p-3 mb-3 text-xs sm:text-sm font-heading"></div>
+
+                    <!-- Quiz Action Buttons -->
+                    <div class="flex items-center justify-between gap-2">
+                        <button onclick="revealQuizAnswer()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-heading font-medium transition">
+                            เฉลยคำตอบทันที
+                        </button>
+                        <button onclick="nextQuizQuestion()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-heading font-bold text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20">
+                            <span>สุ่มคำถามข้อถัดไป</span>
+                            <span>▶</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // ============================================================================
+        // 1. CATEGORIES & COMPLETE 22 HOTSPOTS DATA (100% MATCHING GDEVELOP 5 THAI UI)
+        // ============================================================================
+        const CATEGORIES = [
+            { id: 'all', name: 'ทั้งหมด (22)', color: '#8b5cf6', badgeBg: 'bg-violet-500/20 text-violet-300 border-violet-500/40' },
+            { id: 'cat1', name: '1. แถบแท็บด้านบนสุด', color: '#38bdf8', badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/40' },
+            { id: 'cat2', name: '2. แถบเครื่องมือหลัก', color: '#a855f7', badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+            { id: 'cat3', name: '3. หน้าต่างคุณสมบัติ (ซ้าย)', color: '#f43f5e', badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+            { id: 'cat4', name: '4. พื้นที่ออกแบบฉาก (กลาง)', color: '#10b981', badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+            { id: 'cat5', name: '5. หน้าต่างวัตถุ (ขวาบน)', color: '#f59e0b', badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+            { id: 'cat6', name: '6. หน้าต่างเลเยอร์ (ขวาล่าง)', color: '#ec4899', badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40' }
+        ];
+
+        const HOTSPOTS = [
+            // --- หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar) ---
+            {
+                id: 1,
+                catId: 'cat1',
+                catName: 'หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar)',
+                title: 'ปุ่มเมนูหลัก (≡)',
+                subtitle: 'Main Application Menu',
+                x: 0.4, y: 0.4, w: 2.5, h: 4.4,
+                pinPos: 'bottom',
+                desc: 'เปิดเมนูหลักของโปรแกรม เช่น สร้างโปรเจกต์ใหม่, เปิดไฟล์โปรเจกต์เดิม, บันทึกโปรเจกต์ (Save / Save As), ตั้งค่าโปรแกรม (Preferences) และเปลี่ยนภาษาของโปรแกรม',
+                tip: 'หากเปิดโปรแกรมมาแล้วเป็นภาษาอังกฤษ ให้คลิกปุ่ม ≡ นี้ เลือก File > Preferences > Language แล้วเปลี่ยนเป็น ไทย (Thai) ได้เลย',
+                shortcut: 'Ctrl + S (บันทึก) / Ctrl + O (เปิดโปรเจกต์)'
+            },
+            {
+                id: 2,
+                catId: 'cat1',
+                catName: 'หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar)',
+                title: 'ปุ่มหน้าแรก (รูปบ้าน)',
+                subtitle: 'Home Page Tab',
+                x: 3.0, y: 0.4, w: 2.6, h: 4.4,
+                pinPos: 'bottom',
+                desc: 'กลับไปยังหน้าเริ่มต้น (Home) ของ GDevelop 5 เพื่อจัดการโปรเจกต์, สร้างโปรเจกต์จากเทมเพลตตัวอย่าง, ค้นหา Asset ฟรี หรือดูบทเรียนการสร้างเกม',
+                tip: 'การกดกลับไปหน้าแรก (รูปบ้าน) จะไม่ทำให้ฉากที่เรากำลังทำอยู่หายไป สามารถคลิกแท็บฉากด้านข้างเพื่อกลับมาทำต่อได้ทันที',
+                shortcut: 'คลิกซ้ายที่ไอคอนรูปบ้าน 🏠'
+            },
+            {
+                id: 3,
+                catId: 'cat1',
+                catName: 'หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar)',
+                title: 'แท็บ "ฉากไม่มีชื่อ" (Scene Editor)',
+                subtitle: 'Scene Editor Tab',
+                x: 5.8, y: 0.4, w: 10.3, h: 4.4,
+                pinPos: 'bottom',
+                desc: 'หน้าต่างออกแบบฉากปัจจุบัน (Scene Editor) ที่กำลังเปิดทำงานอยู่ ใช้สำหรับจัดวางตัวละคร พื้นหลัง สิ่งกีดขวาง และออกแบบด่านของเกมในรูปแบบ Visual',
+                tip: 'สังเกตว่าแท็บนี้มีสีสว่างกว่าแท็บอื่น แปลว่าเรากำลังอยู่ในหน้าออกแบบฉาก หากเผลอกดกากบาท (×) ปิดไป สามารถเปิดใหม่ได้ที่ปุ่ม Project Manager (หมายเลข 6)',
+                shortcut: 'คลิกสลับแท็บด้านบน'
+            },
+            {
+                id: 4,
+                catId: 'cat1',
+                catName: 'หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar)',
+                title: 'แท็บ "ฉากไม่มีชื่อ (อีเว้นท์)" (Events Sheet)',
+                subtitle: 'Scene Events Sheet Tab',
+                x: 16.2, y: 0.4, w: 14.3, h: 4.4,
+                pinPos: 'bottom',
+                desc: 'หน้าต่างเขียนชุดคำสั่งและเงื่อนไขของเกม (Event Sheet) สำหรับฉากนี้ โดยใช้ระบบ "เงื่อนไข (Condition) ➔ การกระทำ (Action)" โดยไม่ต้องพิมพ์โค้ดโปรแกรม',
+                tip: 'การทำเกมใน GDevelop จะสลับไปมาระหว่าง 2 แท็บนี้เสมอ คือ 1) วางวัตถุในแท็บ "ฉาก" และ 2) กำหนดกติกาการเล่นในแท็บ "อีเว้นท์"',
+                shortcut: 'คลิกที่แท็บ (อีเว้นท์) เพื่อไปหน้าเขียนคำสั่ง'
+            },
+            {
+                id: 5,
+                catId: 'cat1',
+                catName: 'หมวดที่ 1: แถบแท็บและเมนูด้านบนสุด (Top Bar)',
+                title: 'ปุ่ม Ask AI (ผู้ช่วย AI)',
+                subtitle: 'AI Assistant',
+                x: 84.0, y: 0.6, w: 5.5, h: 4.0,
+                pinPos: 'bottom',
+                desc: 'ผู้ช่วย AI อัจฉริยะในตัวโปรแกรม สำหรับพิมพ์ถามคำถามเกี่ยวกับการใช้งาน ขอคำแนะนำขั้นตอนการทำระบบเกม หรือช่วยตรวจสอบแก้ไขปัญหาเบื้องต้น',
+                tip: 'นักเรียนสามารถพิมพ์ถามเป็นภาษาไทยหรือภาษาอังกฤษสั้นๆ ได้ เช่น "ทำยังไงให้ตัวละครกระโดดเก็บเหรียญ"',
+                shortcut: 'คลิกที่ปุ่ม 🤖 Ask AI มุมขวาบน'
+            },
+
+            // --- หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar) ---
+            {
+                id: 6,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'ปุ่มตัวจัดการโปรเจกต์ และ ปุ่มบันทึก',
+                subtitle: 'Project Manager & Save Project',
+                x: 0.5, y: 5.5, w: 4.6, h: 4.2,
+                pinPos: 'bottom',
+                desc: 'ประกอบด้วย 2 ไอคอนสำคัญ: (ซ้าย) ปุ่ม Project Manager ใช้จัดการฉากทั้งหมด เปลี่ยนชื่อฉาก ตั้งค่าความละเอียดหน้าจอเกม และตัวแปรส่วนกลาง / (ขวา) ไอคอนแผ่นดิสก์ใช้บันทึกโปรเจกต์',
+                tip: 'หากต้องการเปลี่ยนชื่อ "ฉากไม่มีชื่อ" ให้เป็น "ด่านที่ 1" หรือต้องการเพิ่มฉากใหม่ ให้กดที่ไอคอนกลมๆ ซ้ายสุดนี้!',
+                shortcut: 'Ctrl + S (บันทึกโปรเจกต์)'
+            },
+            {
+                id: 7,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'ปุ่ม "▷ แสดงตัวอย่าง" (Preview)',
+                subtitle: 'Launch Game Preview & Network Preview',
+                x: 38.6, y: 5.4, w: 12.2, h: 4.3,
+                pinPos: 'bottom',
+                desc: 'กดเพื่อรันและทดลองเล่นเกมในฉากปัจจุบันทันที! ส่วนปุ่มลูกศรชี้ลง (⌄) ด้านข้าง ใช้สำหรับเปิดโหมดทดสอบเกมผ่านมือถือในวงแลน (Network Preview) หรือเปิด Debugger ตรวจสอบค่าตัวแปร',
+                tip: 'เมื่อแก้ไขฉากหรือเพิ่มคำสั่งใหม่ สามารถกด "แสดงตัวอย่าง" เพื่อทดสอบเกมได้ตลอดเวลาโดยไม่ต้องรอโหลดนาน',
+                shortcut: 'กด F4 หรือ F5 เพื่อรันตัวอย่างเกมทันที'
+            },
+            {
+                id: 8,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'ปุ่ม "🌐 แชร์" (Share / Export)',
+                subtitle: 'Publish & Export Game',
+                x: 51.2, y: 5.4, w: 5.8, h: 4.3,
+                pinPos: 'bottom',
+                desc: 'ใช้สำหรับส่งออกเกม (Publish / Export) เมื่อสร้างเสร็จแล้ว สามารถสร้างเป็นลิงก์ส่งให้เพื่อนเล่นออนไลน์ผ่านเว็บ gd.games หรือส่งออกเป็นไฟล์ติดตั้งบน PC (.exe), มือถือ Android (.apk) และเว็บ HTML5',
+                tip: 'การแชร์เป็นลิงก์ออนไลน์บน gd.games ทำได้ง่ายและเร็วมาก นักเรียนสามารถส่งลิงก์ผลงานส่งครูได้ภายในไม่กี่วินาที',
+                shortcut: 'คลิกปุ่มสีม่วง "🌐 แชร์"'
+            },
+            {
+                id: 9,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'ปุ่มสลับมุมมอง 2D / 3D',
+                subtitle: '2D / 3D Viewport Switcher',
+                x: 63.7, y: 5.6, w: 8.3, h: 4.0,
+                pinPos: 'bottom',
+                desc: 'ใช้สลับโหมดการแสดงผลของพื้นที่ทำงานตรงกลาง ระหว่างมุมมองการออกแบบเกม 2 มิติ (2D) และมุมมองแบบ 3 มิติ (3D Editor)',
+                tip: 'สำหรับการเรียนสร้างเกม 2D พื้นฐาน ให้เลือกค้างไว้ที่ปุ่ม "2D" (สีม่วงอ่อน) เสมอ เพื่อจัดวางตำแหน่ง X, Y ได้แม่นยำ',
+                shortcut: 'คลิกสลับระหว่าง 2D และ 3D'
+            },
+            {
+                id: 10,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'กลุ่มปุ่มเปิด/ปิดหน้าต่างพาเนล (Panel Toggles)',
+                subtitle: '5 Workspace Panel Toggle Icons',
+                x: 72.7, y: 5.6, w: 11.6, h: 4.0,
+                pinPos: 'bottom',
+                desc: 'ประกอบด้วย 5 ปุ่มเรียงกัน ได้แก่: (1) เปิด/ปิดหน้าต่างวัตถุ, (2) รายการอินสแตนซ์ในฉาก, (3) เปิด/ปิดหน้าต่างคุณสมบัติ, (4) จัดกลุ่มวัตถุ (Object Groups), และ (5) เปิด/ปิดหน้าต่างเลเยอร์',
+                tip: 'สำคัญมาก! ถ้านักเรียนเผลอกดปิดหน้าต่าง "คุณสมบัติ", "วัตถุ" หรือ "เลเยอร์" หายไป ให้มากดปุ่มไอคอนตรงนี้เพื่อให้หน้าต่างกลับมาแสดงเหมือนเดิม (ปุ่มที่เปิดอยู่จะเป็นสีม่วงอ่อน)',
+                shortcut: 'คลิกไอคอนเพื่อเปิด/ปิดแต่ละหน้าต่าง'
+            },
+            {
+                id: 11,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'ปุ่มเส้นตาราง (# Grid)',
+                subtitle: 'Grid & Snap Settings',
+                x: 84.4, y: 5.6, w: 2.2, h: 4.0,
+                pinPos: 'bottom',
+                desc: 'เปิด/ปิดการแสดงเส้นตาราง (Show Grid) บนผืนผ้าใบ และตั้งค่าขนาดช่องตาราง (Setup Grid) เพื่อช่วยให้วางบล็อกพื้นดิน กำแพง หรือเหรียญเรียงต่อกันได้อย่างเป็นระเบียบ (Snap to Grid)',
+                tip: 'เวลาสร้างด่านเกมกระโดด (Platformer) หรือเกมแนว Tilemap แนะนำให้เปิดเส้นตาราง # เพื่อให้วางพื้นไม่เหลื่อมกัน',
+                shortcut: 'คลิกที่สัญลักษณ์ # แล้วเลือก Show Grid'
+            },
+            {
+                id: 12,
+                catId: 'cat2',
+                catName: 'หมวดที่ 2: แถบเครื่องมือหลัก (Main Toolbar)',
+                title: 'กลุ่มเครื่องมือแก้ไขฉาก (Undo, Redo, Zoom, ลบวัตถุ)',
+                subtitle: 'Undo, Redo, Zoom & Delete Instance',
+                x: 87.4, y: 5.6, w: 12.0, h: 4.0,
+                pinPos: 'bottom',
+                desc: 'รวมเครื่องมือจัดการบนฉาก: ลูกศรย้อนกลับ (Undo), ลูกศรทำซ้ำ (Redo), แว่นขยายสำหรับปรับระดับการซูมหน้าจอ, รูปถังขยะสำหรับลบวัตถุที่คลิกเลือกบนฉาก และปุ่มค้นหาคำสั่งด่วนมุมขวาสุด',
+                tip: 'หากเผลอลบตัวละครผิด หรือขยับผิดตำแหน่ง ไม่ต้องตกใจ ให้กดลูกศรย้อนกลับ (Undo) หรือกด Ctrl + Z ได้ทันที',
+                shortcut: 'Ctrl+Z (ย้อนกลับ), Ctrl+Y (ทำซ้ำ), Delete (ลบวัตถุ)'
+            },
+
+            // --- หมวดที่ 3: หน้าต่าง "คุณสมบัติ" ด้านซ้าย (Properties Panel) ---
+            {
+                id: 13,
+                catId: 'cat3',
+                catName: 'หมวดที่ 3: หน้าต่าง "คุณสมบัติ" ด้านซ้าย (Properties Panel)',
+                title: 'หน้าต่างคุณสมบัติ (Properties Panel)',
+                subtitle: 'Scene & Instance Properties Inspector',
+                x: 0.2, y: 10.2, w: 19.8, h: 89.5,
+                pinPos: 'right',
+                desc: 'พาเนลด้านซ้ายมือสำหรับแสดงและแก้ไขรายละเอียดของ "ฉาก" หรือเมื่อคลิกเลือก "วัตถุ" บนผืนผ้าใบ จะแสดงค่าพิกัดแกน X, แกน Y, ขนาดความกว้าง/สูง, มุมหมุน (Angle), ลำดับ Z-Order และเลเยอร์ของวัตถุนั้น',
+                tip: 'ตอนที่ยังไม่ได้คลิกเลือกวัตถุใดๆ บนผืนผ้าใบ หน้าต่างนี้จะแสดงการตั้งค่าของ "ฉากไม่มีชื่อ" แทน',
+                shortcut: 'คลิกที่วัตถุบนผืนผ้าใบเพื่อดูคุณสมบัติ'
+            },
+            {
+                id: 14,
+                catId: 'cat3',
+                catName: 'หมวดที่ 3: หน้าต่าง "คุณสมบัติ" ด้านซ้าย (Properties Panel)',
+                title: 'หมวด "คุณสมบัติ" และ "พฤติกรรม"',
+                subtitle: 'Properties & Behaviors Sections',
+                x: 0.4, y: 19.0, w: 19.4, h: 13.0,
+                pinPos: 'right',
+                desc: 'หมวดย่อยสำหรับตั้งค่าพื้นฐานของฉากหรือวัตถุ และหมวด "พฤติกรรม" (Behaviors) ซึ่งใช้ตรวจสอบหรือปรับแต่งความสามารถพิเศษที่ติดอยู่กับวัตถุ เช่น ความเร็วในการเดิน หรือความสูงในการกระโดด',
+                tip: 'คลิกที่ปุ่มลูกศร ❯ ด้านหน้าคำว่า "คุณสมบัติ" หรือ "พฤติกรรม" เพื่อกางดูรายละเอียดด้านใน',
+                shortcut: 'คลิก ❯ เพื่อเปิด/พับหมวดหมู่'
+            },
+            {
+                id: 15,
+                catId: 'cat3',
+                catName: 'หมวดที่ 3: หน้าต่าง "คุณสมบัติ" ด้านซ้าย (Properties Panel)',
+                title: 'หมวด "ตัวแปรของฉาก" (Scene Variables)',
+                subtitle: 'Scene Variables Management',
+                x: 0.4, y: 32.2, w: 19.4, h: 6.5,
+                pinPos: 'right',
+                desc: 'ใช้สร้างและจัดการ "ตัวแปรประจำฉาก" สำหรับเก็บข้อมูลที่ใช้ภายในด่านนี้ เช่น คะแนนสะสมในด่าน (Score), เวลาที่เหลือ (Timer) หรือจำนวนหัวใจของผู้เล่น กดปุ่ม + ด้านขวาเพื่อเพิ่มตัวแปรใหม่ได้ทันที',
+                tip: 'ตัวแปรของฉากจะใช้ได้เฉพาะในฉากนี้เท่านั้น หากต้องการให้คะแนนตามไปทุกด่าน ให้ใช้ Global Variables ใน Project Manager',
+                shortcut: 'คลิกปุ่ม + หรือไอคอน ↗ เพื่อเปิดหน้าต่างตัวแปร'
+            },
+
+            // --- หมวดที่ 4: พื้นที่ออกแบบฉากตรงกลาง (Scene Canvas) ---
+            {
+                id: 16,
+                catId: 'cat4',
+                catName: 'หมวดที่ 4: พื้นที่ออกแบบฉากตรงกลาง (Scene Canvas)',
+                title: 'ผืนผ้าใบพื้นที่ทำงาน (Scene Canvas)',
+                subtitle: 'Interactive Design Canvas',
+                x: 20.2, y: 10.4, w: 59.6, h: 89.2,
+                pinPos: 'top',
+                desc: 'พื้นที่สีขาวตรงกลางเปรียบเสมือนโต๊ะทำงานสำหรับสร้างด่านเกม ให้นักเรียนลากวัตถุ (Drag & Drop) จากพาเนลด้านขวามาวาง ย่อ-ขยาย หรือหมุนจัดวางองค์ประกอบของเกมได้อย่างอิสระ',
+                tip: 'สามารถวางวัตถุออกนอกกรอบสี่เหลี่ยมได้ด้วย เช่น กรณีทำด่านเกมผจญภัยที่ยาวต่อเนื่องแล้วให้กล้องเลื่อนตามตัวละคร',
+                shortcut: 'หมุนลูกกลิ้งเมาส์ = ซูม / กดลูกกลิ้งเมาส์ค้างแล้วลาก = เลื่อนหน้าจอ'
+            },
+            {
+                id: 17,
+                catId: 'cat4',
+                catName: 'หมวดที่ 4: พื้นที่ออกแบบฉากตรงกลาง (Scene Canvas)',
+                title: 'กรอบขอบเขตหน้าจอเกม (Camera Viewport Frame)',
+                subtitle: 'Default Camera Boundaries (X:0, Y:0)',
+                x: 22.4, y: 28.5, w: 55.2, h: 53.1,
+                pinPos: 'top',
+                desc: 'กรอบสี่เหลี่ยมเส้นสีเทาตรงกลางผืนผ้าใบ แสดงขอบเขตขนาดหน้าจอเริ่มต้น (Camera Viewport) ที่ผู้เล่นจะมองเห็นทันทีเมื่อกดเริ่มเกม โดยมุมซ้ายบนสุดของกรอบนี้คือจุดกำเนิดพิกัด (X = 0, Y = 0)',
+                tip: 'หากวางตัวละครไว้นอกกรอบสี่เหลี่ยมนี้และไม่ได้สั่งให้กล้องตามตัวละคร เวลาเปิดเกมมาจะมองไม่เห็นตัวละครนั้น!',
+                shortcut: 'มุมซ้ายบนของกรอบ = พิกัด (0, 0)'
+            },
+
+            // --- หมวดที่ 5: หน้าต่าง "วัตถุ" ด้านขวาบน (Objects Panel) ---
+            {
+                id: 18,
+                catId: 'cat5',
+                catName: 'หมวดที่ 5: หน้าต่าง "วัตถุ" ด้านขวาบน (Objects Panel)',
+                title: 'ช่องค้นหาและหมวด "วัตถุทั่วไป"',
+                subtitle: 'Search Bar & Global Objects',
+                x: 80.2, y: 10.4, w: 19.6, h: 13.0,
+                pinPos: 'left',
+                desc: 'ด้านบนคือช่องค้นหาชื่อวัตถุเมื่อในเกมมีวัตถุจำนวนมาก ส่วนหมวด "วัตถุทั่วไป" (Global Objects) คือรายการวัตถุที่ตั้งค่าให้สามารถนำไปใช้ร่วมกันได้ทุกฉากในเกม เช่น ตัวละครผู้เล่นหลัก หรือปุ่มเมนู',
+                tip: 'หากคลิกขวาที่วัตถุฉากแล้วเลือก "ตั้งเป็นวัตถุทั่วไป (Set as Global Object)" วัตถุนั้นจะย้ายขึ้นมาอยู่ในหมวดนี้และใช้ข้ามด่านได้ทันที',
+                shortcut: 'พิมพ์ชื่อในช่อง 🔍 ค้นหาวัตถุ'
+            },
+            {
+                id: 19,
+                catId: 'cat5',
+                catName: 'หมวดที่ 5: หน้าต่าง "วัตถุ" ด้านขวาบน (Objects Panel)',
+                title: 'หมวด "วัตถุฉาก" และปุ่ม "+ เพิ่มวัตถุ"',
+                subtitle: 'Scene Objects & Add Object Button',
+                x: 80.2, y: 23.6, w: 19.6, h: 32.2,
+                pinPos: 'left',
+                desc: 'จุดเริ่มต้นสำคัญที่สุดในการสร้างเกม! กดปุ่มสีม่วง "+ เพิ่มวัตถุ" เพื่อสร้างวัตถุใหม่เข้าสู่ฉาก เช่น สไปรท์ตัวละคร (Sprite), พื้นหลังแบบต่อกัน (Tiled Sprite), ข้อความ (Text) หรือเอฟเฟกต์พาร์ติเคิล',
+                tip: 'เมื่อสร้างวัตถุเสร็จแล้ว วัตถุจะแสดงในรายการนี้ นักเรียนต้อง "คลิกค้างแล้วลาก" วัตถุจากรายการนี้ไปวางลงบนผืนผ้าใบสีขาวตรงกลางจึงจะปรากฏในฉาก!',
+                shortcut: 'คลิก "+ เพิ่มวัตถุ" ➔ เลือกประเภทวัตถุ ➔ ลากลงผืนผ้าใบ'
+            },
+
+            // --- หมวดที่ 6: หน้าต่าง "เลเยอร์" ด้านขวาล่าง (Layers Panel) ---
+            {
+                id: 20,
+                catId: 'cat6',
+                catName: 'หมวดที่ 6: หน้าต่าง "เลเยอร์" ด้านขวาล่าง (Layers Panel)',
+                title: 'หน้าต่างเลเยอร์ และปุ่มเพิ่มเลเยอร์ (+)',
+                subtitle: 'Layers Panel & Add New Layer (+)',
+                x: 80.2, y: 56.4, w: 19.6, h: 7.5,
+                pinPos: 'left',
+                desc: 'ใช้จัดการลำดับชั้นของการแสดงผล (เหมือนแผ่นใสซ้อนกัน) กดปุ่มเครื่องหมายบวก (+) เพื่อเพิ่มเลเยอร์ใหม่ เช่น การสร้างเลเยอร์ "UI" ไว้ด้านบนสุดเพื่อวางปุ่มกดและคะแนนไม่ให้เลื่อนหายไปเวลาตัวละครเดิน',
+                tip: 'เลเยอร์ที่อยู่บรรทัดบนจะแสดงผลทับเลเยอร์ที่อยู่บรรทัดล่างเสมอ สามารถลากสลับลำดับขึ้น-ลงได้',
+                shortcut: 'คลิกปุ่ม + มุมขวาของหน้าต่างเลเยอร์'
+            },
+            {
+                id: 21,
+                catId: 'cat6',
+                catName: 'หมวดที่ 6: หน้าต่าง "เลเยอร์" ด้านขวาล่าง (Layers Panel)',
+                title: 'รายการ "เลเยอร์ฐาน" (Base Layer)',
+                subtitle: 'Base Layer & Layer Controls (Effects, Visibility, Lock)',
+                x: 80.5, y: 64.2, w: 19.0, h: 4.0,
+                pinPos: 'left',
+                desc: 'เลเยอร์หลักเริ่มต้นที่วัตถุทุกชิ้นจะถูกวางลงไปโดยอัตโนมัติ ด้านขวามีไอคอนควบคุม 4 ปุ่ม คือ: (1) วงกลม = เพิ่มเอฟเฟกต์แสง/ฟิลเตอร์, (2) รูปตา = ซ่อน/แสดงเลเยอร์, (3) แม่กุญแจ = ล็อกไม่ให้เผลอขยับวัตถุในเลเยอร์นี้, (4) จุด 3 จุด = เมนูเพิ่มเติม',
+                tip: 'เมื่อวางฉากหลังเสร็จแล้ว แนะนำให้แยกไว้คนละเลเยอร์แล้วกด "รูปแม่กุญแจ" ล็อกไว้ เวลาคลิกลากตัวละครจะได้ไม่เผลอดึงฉากหลังติดมือมาด้วย',
+                shortcut: '👁️ ซ่อน/แสดง | 🔒 ล็อกเลเยอร์'
+            },
+            {
+                id: 22,
+                catId: 'cat6',
+                catName: 'หมวดที่ 6: หน้าต่าง "เลเยอร์" ด้านขวาล่าง (Layers Panel)',
+                title: 'ตัวเลือก "สีพื้นหลัง" (Background Color)',
+                subtitle: 'Scene Background Color Picker',
+                x: 80.5, y: 68.4, w: 19.0, h: 4.2,
+                pinPos: 'left',
+                desc: 'ใช้กำหนดสีพื้นหลังเริ่มต้นของฉากปัจจุบัน เพียงคลิกที่ช่องสี่เหลี่ยมสีขาวด้านขวา ก็จะมีถาดสี (Color Picker) เปิดขึ้นมาให้เลือกเปลี่ยนเป็นสีท้องฟ้า สีมืดอวกาศ หรือสีใดก็ได้ตามธีมของเกม',
+                tip: 'การเปลี่ยนสีพื้นหลังตรงนี้เป็นวิธีที่เร็วที่สุดในการเปลี่ยนบรรยากาศของฉากโดยยังไม่ต้องใช้รูปภาพพื้นหลัง',
+                shortcut: 'คลิกที่กล่องสีขาวด้านขวาเพื่อเลือกสี'
+            }
+        ];
+
+        // ============================================================================
+        // 2. APPLICATION STATE
+        // ============================================================================
+        let state = {
+            mode: 'guide',           // 'guide' | 'quiz'
+            selectedId: 1,           // Currently active hotspot ID (1..22)
+            activeCategory: 'all',   // Category filter
+            autoZoom: true,          // Automatically zoom & pan to selected hotspot
+            showAllBoxes: false,     // Show all 22 bounding boxes simultaneously
+            showPins: true,          // Show numbered pin badges on screen
+            spotlight: true,         // Dim background outside active bounding box
+            zoomScale: 1,            // Current transform scale
+            panX: 0,                 // Current transform translateX (%)
+            panY: 0,                 // Current transform translateY (%)
+            isDrawing: false,        // Teacher freehand pen mode
+            quiz: {
+                currentTargetId: null,
+                options: [],
+                answered: false,
+                score: 0,
+                total: 0
+            }
+        };
+
+        // Simple Web Audio Sound Effects for Classroom Engagement
+        const audioCtx = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)
+            ? new (window.AudioContext || window.webkitAudioContext)()
+            : null;
+
+        function playTone(freq = 520, duration = 0.08, type = 'sine') {
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        // ============================================================================
+        // 3. INITIALIZATION & RENDERING
+        // ============================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCategoryFilterBar();
+            renderHotspotsOnStage();
+            renderHotspotDirectory();
+            selectHotspot(1, false); // Start at Hotspot #1 in full overview first
+            initDrawingCanvas();
+            initKeyboardNavigation();
+        });
+
+        function getCategoryObj(catId) {
+            return CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
+        }
+
+        // Render Category Filter Buttons below the stage
+        function renderCategoryFilterBar() {
+            const bar = document.getElementById('categoryFilterBar');
+            bar.innerHTML = CATEGORIES.map(cat => {
+                const isActive = state.activeCategory === cat.id;
+                return `
+                    <button onclick="filterByCategory('${cat.id}')"
+                        class="px-2.5 py-1 rounded-lg text-xs font-heading font-medium transition flex items-center gap-1.5 border ${
+                            isActive
+                                ? 'bg-slate-800 text-white border-slate-500 shadow'
+                                : 'bg-[#0e1018] text-slate-400 border-slate-800 hover:text-slate-200'
+                        }">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${cat.color}"></span>
+                        <span>${cat.name}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function filterByCategory(catId) {
+            state.activeCategory = catId;
+            renderCategoryFilterBar();
+            renderHotspotsOnStage();
+            renderHotspotDirectory();
+
+            // If filtering by specific category, select its first hotspot
+            if (catId !== 'all') {
+                const firstInCat = HOTSPOTS.find(h => h.catId === catId);
+                if (firstInCat) selectHotspot(firstInCat.id, state.autoZoom);
+            } else {
+                resetZoomView();
+            }
+        }
+
+        // Render Bounding Boxes and Numbered Pins on the Stage
+        function renderHotspotsOnStage() {
+            const container = document.getElementById('hotspotsLayer');
+            const isQuiz = state.mode === 'quiz';
+
+            container.innerHTML = HOTSPOTS.map(h => {
+                const cat = getCategoryObj(h.catId);
+                const isSelected = (!isQuiz && state.selectedId === h.id) || (isQuiz && state.quiz.currentTargetId === h.id);
+                const isCategoryMatch = state.activeCategory === 'all' || state.activeCategory === h.catId;
+
+                // Determine if bounding box should be visible
+                const showBox = isSelected || (!isQuiz && state.showAllBoxes && isCategoryMatch);
+
+                // Determine pin position around or inside the bounding box so it doesn't obscure small buttons
+                let pinLeft = h.x + h.w / 2;
+                let pinTop = h.y + h.h / 2;
+                if (h.h < 6) {
+                    // Small toolbar/topbar buttons: place pin slightly at top-left corner of box
+                    pinLeft = h.x + Math.min(h.w * 0.2, 1.2);
+                    pinTop = h.y + h.h * 0.5;
+                }
+
+                // Floating label position
+                const labelOnBottom = h.y < 14;
+                const labelPosClass = labelOnBottom
+                    ? 'top-full mt-1.5 left-0'
+                    : 'bottom-full mb-1.5 left-0';
+
+                // Shift label left if near right edge of screen
+                const labelAlignStyle = (h.x + h.w > 78) ? 'right: 0; left: auto;' : 'left: 0;';
+
+                return `
+                    <!-- Clickable Hotspot Bounding Box -->
+                    <div onclick="handleStageHotspotClick(${h.id}, event)"
+                        style="
+                            left: ${h.x}%;
+                            top: ${h.y}%;
+                            width: ${h.w}%;
+                            height: ${h.h}%;
+                            --box-color: ${ isQuiz ? '#f59e0b' : cat.color };
+                            border-color: ${ showBox ? (isQuiz ? '#fbbf24' : cat.color) : 'transparent' };
+                            background-color: ${ isSelected ? (isQuiz ? 'rgba(245, 158, 11, 0.16)' : `${cat.color}22`) : (showBox ? `${cat.color}14` : 'transparent') };
+                        "
+                        class="absolute rounded-[5px] cursor-pointer transition-all duration-200 ${
+                            isSelected
+                                ? 'border-[2.5px] highlight-box-active'
+                                : (showBox ? 'border-2 border-dashed opacity-85 hover:opacity-100' : 'hover:border-2 hover:border-white/50 hover:bg-white/5')
+                        }"
+                        title="${isQuiz ? 'ทายซิว่าส่วนนี้คืออะไร?' : `${h.id}. ${h.title}`}">
+
+                        <!-- Floating Callout Tag on Active Bounding Box -->
+                        ${isSelected ? `
+                            <div style="${labelAlignStyle} background-color: ${isQuiz ? '#d97706' : cat.color};"
+                                class="absolute ${labelPosClass} z-50 px-2 py-0.5 rounded-md text-white font-heading font-bold text-[11px] sm:text-xs whitespace-nowrap shadow-xl border border-white/80 flex items-center gap-1.5 pointer-events-none">
+                                <span class="px-1.5 py-0.2 bg-black/30 rounded text-[10px]">${isQuiz ? '?' : `#${h.id}`}</span>
+                                <span>${isQuiz ? 'ส่วนประกอบนี้คืออะไร?' : h.title}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Numbered Pin Badge -->
+                    ${(!isQuiz && state.showPins && isCategoryMatch) ? `
+                        <button onclick="handleStageHotspotClick(${h.id}, event)"
+                            style="
+                                left: ${pinLeft}%;
+                                top: ${pinTop}%;
+                                background-color: ${isSelected ? '#ffffff' : cat.color};
+                                color: ${isSelected ? '#0f172a' : '#ffffff'};
+                                border-color: ${isSelected ? cat.color : '#ffffff'};
+                            "
+                            class="pin-marker ${isSelected ? 'active-pin' : ''} absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 font-heading font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-md cursor-pointer z-40">
+                            ${h.id}
+                        </button>
+                    ` : ''}
+                `;
+            }).join('');
+
+            updateSpotlightMask();
+        }
+
+        // Update SVG Mask Cutout so the active bounding box shines brightly
+        function updateSpotlightMask() {
+            const spotlightRect = document.getElementById('spotlightRect');
+            const cutout = document.getElementById('spotlightCutout');
+
+            const targetId = state.mode === 'quiz' ? state.quiz.currentTargetId : state.selectedId;
+            const hotspot = HOTSPOTS.find(h => h.id === targetId);
+
+            if (!state.spotlight || !hotspot || (state.showAllBoxes && state.mode !== 'quiz')) {
+                spotlightRect.style.opacity = '0';
+                return;
+            }
+
+            spotlightRect.style.opacity = '1';
+            // SVG viewBox is 1000 x 605
+            const pad = 4;
+            const x = (hotspot.x / 100) * 1000 - pad;
+            const y = (hotspot.y / 100) * 605 - pad;
+            const w = (hotspot.w / 100) * 1000 + pad * 2;
+            const h = (hotspot.h / 100) * 605 + pad * 2;
+
+            cutout.setAttribute('x', Math.max(0, x));
+            cutout.setAttribute('y', Math.max(0, y));
+            cutout.setAttribute('width', w);
+            cutout.setAttribute('height', h);
+        }
+
+        // Handle clicking a hotspot or pin on the stage
+        function handleStageHotspotClick(id, event) {
+            if (event) event.stopPropagation();
+            if (state.mode === 'quiz') return; // In quiz mode, clicking stage doesn't switch question
+            playTone(600, 0.06);
+            selectHotspot(id, state.autoZoom);
+        }
+
+        // Core Function to Select a Hotspot (1..22), Update Details, and Zoom if enabled
+        function selectHotspot(id, shouldZoom = state.autoZoom) {
+            const hotspot = HOTSPOTS.find(h => h.id === id);
+            if (!hotspot) return;
+
+            state.selectedId = id;
+            const cat = getCategoryObj(hotspot.catId);
+
+            // 1. Update Right Sidebar Details
+            document.getElementById('stepCounterBadge').textContent = `จุดที่ ${hotspot.id} จาก ${HOTSPOTS.length}`;
+            document.getElementById('stepProgressBar').style.width = `${(hotspot.id / HOTSPOTS.length) * 100}%`;
+
+            const pinBadge = document.getElementById('detailPinBadge');
+            pinBadge.textContent = hotspot.id;
+            pinBadge.style.backgroundColor = cat.color;
+
+            const catTag = document.getElementById('detailCategoryTag');
+            catTag.textContent = hotspot.catName;
+            catTag.style.borderColor = `${cat.color}66`;
+            catTag.style.color = '#ffffff';
+            catTag.style.backgroundColor = `${cat.color}33`;
+
+            document.getElementById('detailTitle').textContent = hotspot.title;
+            document.getElementById('detailSubtitle').textContent = hotspot.subtitle;
+            document.getElementById('detailDescription').textContent = hotspot.desc;
+            document.getElementById('detailTip').textContent = hotspot.tip;
+            document.getElementById('detailShortcut').textContent = hotspot.shortcut;
+
+            // 2. Update Floating Zoom Banner
+            document.getElementById('floatingBannerNum').textContent = hotspot.id;
+            document.getElementById('floatingBannerNum').style.backgroundColor = cat.color;
+            document.getElementById('floatingBannerTitle').textContent = hotspot.title;
+
+            // 3. Re-render Stage Overlays & Directory List
+            renderHotspotsOnStage();
+            renderHotspotDirectory();
+
+            // Scroll active item into view in directory list
+            const activeListEl = document.getElementById(`dir-item-${hotspot.id}`);
+            if (activeListEl) {
+                activeListEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // 4. Perform Smart Zoom & Pan if enabled
+            if (shouldZoom) {
+                zoomToHotspotBox(hotspot);
+            }
+        }
+
+        // Step Forward / Backward (◀ / ▶)
+        function stepHotspot(delta) {
+            playTone(540, 0.05);
+            let nextId = state.selectedId + delta;
+            if (nextId > HOTSPOTS.length) nextId = 1;
+            if (nextId < 1) nextId = HOTSPOTS.length;
+            selectHotspot(nextId, state.autoZoom);
+        }
+
+        // Render the 22-Point Directory List in the Right Sidebar
+        function renderHotspotDirectory() {
+            const listEl = document.getElementById('hotspotListContainer');
+            const query = (document.getElementById('searchHotspotInput')?.value || '').trim().toLowerCase();
+
+            const filtered = HOTSPOTS.filter(h => {
+                const matchCat = state.activeCategory === 'all' || h.catId === state.activeCategory;
+                const matchQuery = !query ||
+                    h.title.toLowerCase().includes(query) ||
+                    h.subtitle.toLowerCase().includes(query) ||
+                    h.desc.toLowerCase().includes(query) ||
+                    String(h.id) === query;
+                return matchCat && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">ไม่พบส่วนประกอบที่ค้นหา</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(h => {
+                const cat = getCategoryObj(h.catId);
+                const isSelected = state.selectedId === h.id;
+                return `
+                    <button id="dir-item-${h.id}" onclick="selectHotspot(${h.id}, state.autoZoom); playTone(580, 0.05);"
+                        class="w-full text-left p-2.5 rounded-xl border transition-all flex items-center gap-3 ${
+                            isSelected
+                                ? 'bg-violet-600/20 border-violet-500/70 shadow-md'
+                                : 'bg-[#0e1018]/80 hover:bg-slate-800/70 border-slate-800/80'
+                        }">
+                        <span style="background-color: ${cat.color}"
+                            class="w-7 h-7 rounded-lg font-heading font-bold text-xs text-white flex items-center justify-center shrink-0 shadow">
+                            ${h.id}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-xs sm:text-sm font-heading font-semibold text-white truncate">${h.title}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${h.desc}</div>
+                        </div>
+                        <span class="text-xs text-violet-400 shrink-0">${isSelected ? '●' : '❯'}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // ============================================================================
+        // 4. SMART ZOOM & PAN ENGINE
+        // ============================================================================
+        function zoomToHotspotBox(hotspot) {
+            // Calculate an optimal zoom scale based on the bounding box size
+            // Small buttons get zoomed in up to 2.4x; large panels get zoomed 1.25x - 1.5x
+            const maxDim = Math.max(hotspot.w, hotspot.h);
+            let targetScale = 1.85;
+            if (maxDim > 45) targetScale = 1.18;
+            else if (maxDim > 25) targetScale = 1.45;
+            else if (maxDim < 8) targetScale = 2.35;
+
+            const centerX = hotspot.x + hotspot.w / 2;
+            const centerY = hotspot.y + hotspot.h / 2;
+
+            // Calculate translate percentages so (centerX, centerY) moves toward center (50%, 50%)
+            // With transform-origin: 0 0, newX = 50 - centerX * scale
+            let tx = 50 - centerX * targetScale;
+            let ty = 50 - centerY * targetScale;
+
+            // Clamp translation so we never pan outside the 0%..100% stage edges
+            const minTx = 100 - 100 * targetScale;
+            const minTy = 100 - 100 * targetScale;
+            tx = Math.min(0, Math.max(minTx, tx));
+            ty = Math.min(0, Math.max(minTy, ty));
+
+            applyStageTransform(targetScale, tx, ty);
+        }
+
+        function applyStageTransform(scale, txPercent, tyPercent) {
+            state.zoomScale = scale;
+            state.panX = txPercent;
+            state.panY = tyPercent;
+
+            const stage = document.getElementById('zoomStage');
+            stage.style.transform = `translate(${txPercent}%, ${tyPercent}%) scale(${scale})`;
+
+            document.getElementById('zoomPercentBadge').textContent = `${Math.round(scale * 100)}%`;
+
+            const banner = document.getElementById('floatingZoomBanner');
+            if (scale > 1.05 && state.mode === 'guide') {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function resetZoomView() {
+            applyStageTransform(1, 0, 0);
+        }
+
+        function manualZoom(delta) {
+            let newScale = Math.min(3.0, Math.max(1.0, state.zoomScale + delta));
+            if (newScale === 1.0) {
+                resetZoomView();
+                return;
+            }
+            const targetId = state.mode === 'quiz' ? state.quiz.currentTargetId : state.selectedId;
+            const hotspot = HOTSPOTS.find(h => h.id === targetId) || { x: 40, y: 40, w: 20, h: 20 };
+            const centerX = hotspot.x + hotspot.w / 2;
+            const centerY = hotspot.y + hotspot.h / 2;
+
+            let tx = 50 - centerX * newScale;
+            let ty = 50 - centerY * newScale;
+            const minTx = 100 - 100 * newScale;
+            const minTy = 100 - 100 * newScale;
+            tx = Math.min(0, Math.max(minTx, tx));
+            ty = Math.min(0, Math.max(minTy, ty));
+
+            applyStageTransform(newScale, tx, ty);
+        }
+
+        // Toggle Toolbar Options
+        function toggleAutoZoom() {
+            state.autoZoom = !state.autoZoom;
+            const btn = document.getElementById('btnAutoZoom');
+            const dot = document.getElementById('autoZoomDot');
+            const status = document.getElementById('autoZoomStatus');
+
+            status.textContent = state.autoZoom ? 'เปิด' : 'ปิด';
+            if (state.autoZoom) {
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-indigo-600/25 border-indigo-500/60 text-indigo-200';
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                const current = HOTSPOTS.find(h => h.id === state.selectedId);
+                if (current) zoomToHotspotBox(current);
+            } else {
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-400';
+                dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+                resetZoomView();
+            }
+        }
+
+        function toggleShowAllBoxes() {
+            state.showAllBoxes = !state.showAllBoxes;
+            const btn = document.getElementById('btnShowAllBoxes');
+            const label = document.getElementById('showAllBoxesLabel');
+
+            if (state.showAllBoxes) {
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-amber-500/25 border-amber-400 text-amber-200 shadow';
+                label.textContent = 'แสดงกรอบทั้งหมด: เปิด';
+                resetZoomView();
+            } else {
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-300 hover:text-white';
+                label.textContent = 'แสดงกรอบทั้งหมด (22 จุด)';
+            }
+            renderHotspotsOnStage();
+        }
+
+        function togglePinsVisibility() {
+            state.showPins = !state.showPins;
+            document.getElementById('togglePinsLabel').textContent = `ปุ่มตัวเลข: ${state.showPins ? 'แสดง' : 'ซ่อน'}`;
+            renderHotspotsOnStage();
+        }
+
+        function toggleSpotlight() {
+            state.spotlight = !state.spotlight;
+            const btn = document.getElementById('btnSpotlight');
+            document.getElementById('spotlightStatus').textContent = state.spotlight ? 'เปิด' : 'ปิด';
+            btn.className = state.spotlight
+                ? 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-amber-500/20 border-amber-500/50 text-amber-200'
+                : 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-400';
+            updateSpotlightMask();
+        }
+
+        // ============================================================================
+        // 5. CLASSROOM QUIZ MODE (ทายส่วนประกอบหน้าจอ)
+        // ============================================================================
+        function setAppMode(mode) {
+            state.mode = mode;
+            const btnGuide = document.getElementById('btnModeGuide');
+            const btnQuiz = document.getElementById('btnModeQuiz');
+            const guidePanel = document.getElementById('guideSidebarPanel');
+            const quizPanel = document.getElementById('quizSidebarPanel');
+
+            if (mode === 'quiz') {
+                btnQuiz.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 font-bold shadow';
+                btnGuide.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 text-slate-300 hover:text-white';
+                guidePanel.classList.add('hidden');
+                quizPanel.classList.remove('hidden');
+                quizPanel.classList.add('flex');
+                nextQuizQuestion();
+            } else {
+                btnGuide.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 bg-violet-600 text-white shadow';
+                btnQuiz.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-medium transition-all flex items-center gap-1.5 text-slate-300 hover:text-white';
+                quizPanel.classList.add('hidden');
+                quizPanel.classList.remove('flex');
+                guidePanel.classList.remove('hidden');
+                selectHotspot(state.selectedId, state.autoZoom);
+            }
+        }
+
+        function nextQuizQuestion() {
+            state.quiz.answered = false;
+            document.getElementById('quizFeedbackBox').classList.add('hidden');
+
+            // Pick a random hotspot different from the previous one
+            const pool = HOTSPOTS.filter(h => h.id !== state.quiz.currentTargetId);
+            const target = pool[Math.floor(Math.random() * pool.length)];
+            state.quiz.currentTargetId = target.id;
+
+            // Pick 3 distractors
+            const distractors = HOTSPOTS
+                .filter(h => h.id !== target.id)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
+
+            const choices = [target, ...distractors].sort(() => Math.random() - 0.5);
+            state.quiz.options = choices;
+
+            // Update Quiz UI
+            document.getElementById('quizQuestionNumber').textContent = `คำถามข้อที่ ${state.quiz.total + 1}`;
+            document.getElementById('quizCategoryHint').textContent = target.catName.split('(')[0];
+            document.getElementById('quizFunctionClue').textContent = `💡 คำใบ้หน้าที่: "${target.desc}"`;
+
+            renderQuizOptions();
+            renderHotspotsOnStage();
+
+            if (state.autoZoom) {
+                zoomToHotspotBox(target);
+            }
+        }
+
+        function renderQuizOptions(selectedChoiceId = null) {
+            const container = document.getElementById('quizOptionsContainer');
+            const targetId = state.quiz.currentTargetId;
+
+            container.innerHTML = state.quiz.options.map((opt, idx) => {
+                const letters = ['ก', 'ข', 'ค', 'ง'];
+                let btnStyle = 'bg-[#141824] hover:bg-slate-800 border-slate-700 text-slate-100';
+
+                if (state.quiz.answered) {
+                    if (opt.id === targetId) {
+                        btnStyle = 'bg-emerald-600/30 border-emerald-400 text-emerald-100 font-bold';
+                    } else if (opt.id === selectedChoiceId) {
+                        btnStyle = 'bg-rose-600/30 border-rose-400 text-rose-200';
+                    } else {
+                        btnStyle = 'bg-[#10131d] border-slate-800 text-slate-500 opacity-60';
+                    }
+                }
+
+                return `
+                    <button onclick="checkQuizAnswer(${opt.id})" ${state.quiz.answered ? 'disabled' : ''}
+                        class="w-full text-left p-3 rounded-xl border transition flex items-center gap-3 ${btnStyle}">
+                        <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-600 font-heading font-bold text-xs flex items-center justify-center shrink-0">
+                            ${letters[idx]}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-xs sm:text-sm font-heading font-semibold">${opt.title}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${opt.subtitle}</div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function checkQuizAnswer(choiceId) {
+            if (state.quiz.answered) return;
+            state.quiz.answered = true;
+            state.quiz.total += 1;
+
+            const isCorrect = choiceId === state.quiz.currentTargetId;
+            const target = HOTSPOTS.find(h => h.id === state.quiz.currentTargetId);
+            const feedbackBox = document.getElementById('quizFeedbackBox');
+            feedbackBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                state.quiz.score += 1;
+                playTone(660, 0.12);
+                setTimeout(() => playTone(880, 0.18), 110);
+                feedbackBox.className = 'rounded-xl p-3 mb-3 text-xs sm:text-sm font-heading bg-emerald-500/20 border border-emerald-500/50 text-emerald-200';
+                feedbackBox.innerHTML = `✅ <strong>ถูกต้องครับ!</strong> นี่คือ <strong>#${target.id} ${target.title}</strong>`;
+            } else {
+                playTone(240, 0.22, 'sawtooth');
+                feedbackBox.className = 'rounded-xl p-3 mb-3 text-xs sm:text-sm font-heading bg-rose-500/20 border border-rose-500/50 text-rose-200';
+                feedbackBox.innerHTML = `❌ <strong>ยังไม่ถูกครับ!</strong> คำตอบที่ถูกต้องคือ <strong>#${target.id} ${target.title}</strong>`;
+            }
+
+            document.getElementById('quizScoreDisplay').textContent = `${state.quiz.score} / ${state.quiz.total}`;
+            renderQuizOptions(choiceId);
+        }
+
+        function revealQuizAnswer() {
+            if (state.quiz.answered) return;
+            checkQuizAnswer(state.quiz.currentTargetId);
+        }
+
+        // ============================================================================
+        // 6. TEACHER FREEHAND DRAWING PEN ON CANVAS
+        // ============================================================================
+        let drawCtx = null;
+        let isPenDown = false;
+
+        function initDrawingCanvas() {
+            const canvas = document.getElementById('annotationCanvas');
+            drawCtx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = 1365;
+                canvas.height = 826;
+            }
+            resizeCanvas();
+
+            const getCoords = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: ((clientX - rect.left) / rect.width) * canvas.width,
+                    y: ((clientY - rect.top) / rect.height) * canvas.height
+                };
+            };
+
+            canvas.addEventListener('pointerdown', (e) => {
+                if (!state.isDrawing) return;
+                isPenDown = true;
+                const { x, y } = getCoords(e);
+                drawCtx.beginPath();
+                drawCtx.moveTo(x, y);
+                drawCtx.strokeStyle = '#fb7185';
+                drawCtx.lineWidth = 5;
+                drawCtx.lineCap = 'round';
+                drawCtx.lineJoin = 'round';
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (!state.isDrawing || !isPenDown) return;
+                const { x, y } = getCoords(e);
+                drawCtx.lineTo(x, y);
+                drawCtx.stroke();
+            });
+
+            window.addEventListener('pointerup', () => {
+                isPenDown = false;
+            });
+        }
+
+        function toggleDrawingMode() {
+            state.isDrawing = !state.isDrawing;
+            const canvas = document.getElementById('annotationCanvas');
+            const btn = document.getElementById('btnDrawPen');
+            const clearBtn = document.getElementById('btnClearDraw');
+
+            if (state.isDrawing) {
+                canvas.classList.remove('pointer-events-none');
+                canvas.classList.add('cursor-crosshair');
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-rose-600 text-white border-rose-400 shadow';
+                document.getElementById('drawPenLabel').textContent = 'กำลังใช้ปากกาวาด (กดเพื่อปิด)';
+                clearBtn.classList.remove('hidden');
+            } else {
+                canvas.classList.add('pointer-events-none');
+                canvas.classList.remove('cursor-crosshair');
+                btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium flex items-center gap-1.5 border transition bg-slate-800/90 border-slate-700 text-slate-300 hover:text-white';
+                document.getElementById('drawPenLabel').textContent = 'ปากกาวาดบนจอ';
+            }
+        }
+
+        function clearAnnotationCanvas() {
+            const canvas = document.getElementById('annotationCanvas');
+            if (drawCtx) drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // ============================================================================
+        // 7. KEYBOARD NAVIGATION FOR CLASSROOM PRESENTATION
+        // ============================================================================
+        function initKeyboardNavigation() {
+            window.addEventListener('keydown', (e) => {
+                // Ignore if typing in search box
+                if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    if (state.mode === 'guide') stepHotspot(1);
+                    else nextQuizQuestion();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    if (state.mode === 'guide') stepHotspot(-1);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    resetZoomView();
+                }
+            });
+        }
+
+        // ============================================================================
+        // 8. CUSTOM SCREENSHOT UPLOAD & STANDALONE OFFLINE HTML DOWNLOAD
+        // ============================================================================
+        function handleCustomImageUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgEl = document.getElementById('uploadedScreenshotImg');
+                imgEl.src = e.target.result;
+                imgEl.classList.remove('hidden');
+                document.getElementById('uploadBtnLabel').textContent = 'เปลี่ยนไฟล์รูปภาพ';
+                document.getElementById('btnResetImage').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetToDefaultReplica() {
+            const imgEl = document.getElementById('uploadedScreenshotImg');
+            imgEl.src = '';
+            imgEl.classList.add('hidden');
+            document.getElementById('uploadBtnLabel').textContent = 'อัปโหลดไฟล์รูปภาพจริง';
+            document.getElementById('btnResetImage').classList.add('hidden');
+        }
+
+        function downloadStandaloneHTML() {
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'คู่มือการสอน_GDevelop5_SceneEditor.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
